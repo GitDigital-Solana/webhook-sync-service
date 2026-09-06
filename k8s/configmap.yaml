@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: webhook-sync-config
+  namespace: webhook-sync
+data:
+  SYNC_INTERVAL_MS: "5000"
+  BATCH_SIZE: "10"
+  NODE_ENV: "production"
+  TARGET_API_URL: "https://api.example.com"
