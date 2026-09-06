@@ -1,0 +1,45 @@
+version: '3.8'
+services:
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: webhook
+      POSTGRES_PASSWORD: webhookpass
+      POSTGRES_DB: webhook_sync
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U webhook"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  app:
+    build: .
+    ports:
+      - "3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    environment:
+      DATABASE_URL: postgresql://webhook:webhookpass@postgres:5432/webhook_sync
+      REDIS_URL: redis://redis:6379
+      WEBHOOK_SECRET: dev-secret
+      TARGET_API_URL: https://httpbin.org/post
+      TARGET_API_KEY: dummy-key
+      SYNC_INTERVAL_MS: 5000
+      BATCH_SIZE: 10
+    volumes:
+      - ./logs:/app/logs
+
+volumes:
+  pgdata:
